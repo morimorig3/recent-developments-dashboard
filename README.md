@@ -1,48 +1,47 @@
-# Astro Starter Kit: Basics
+# がんばらない技術キャッチアップ
 
-```sh
-npm create astro@latest -- --template basics
-```
+![キャプチャ](./resources/screenshot.png)
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+https://morimorig3.github.io/recent-developments-dashboard/
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+技術キャッチアップが苦手な人向けに作ってみたアプリケーション
 
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
+- 件数を少なくしたい
+- それでも質の高いものだけをみたい
 
-## 🚀 Project Structure
+というわがままな要望を叶えるために作成
 
-Inside of your Astro project, you'll see the following folders and files:
+# 仕様
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+- QiitaとZennの良さそうな記事をまとめて表示してくれます（最大10件！）
+- 一度読んだ記事からはnewアイコンが消えてくれる（newがついてるやつだけポチッとしておけばいい！）
+- 毎朝4時に自動デプロイで情報が更新される
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## Qiita
 
-## 🧞 Commands
+過去1週間で10ストックされた記事を若い順に5件
 
-All commands are run from the root of the project, from a terminal:
+`https://qiita.com/api/v2/items?page=1&per_page=100&query=created:>${oneWeekAgo}+stocks:>10`
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+ページングはしていない
 
-## 👀 Want to learn more?
+## Zenn
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+トレンドの上位10件
+
+`https://zenn.dev/api/articles`
+
+現時点ではトレンドが帰ってきてそうだった
+
+API仕様書は公開されていないので、正確ではないし変更される可能性がある
+
+# やってみたこと
+
+- Astro使用してみた
+- ほぼAIにコーディングしてもらいました（Cursorエディター）
+
+ほぼAIのレビューしてるだけだったのでタイピング量かなり減って時代を感じた
+
+平気で正しそうな嘘コード作ってくるので面倒見てあげる必要はある
+
+無理させすぎない方がいい回答出してくれる
