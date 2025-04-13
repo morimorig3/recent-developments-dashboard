@@ -1,41 +1,35 @@
 ---
 import Card from '../components/Card.astro';
+import { getItemsFromZenn } from '../services/getItemsFromZenn';
+import { getItemsFromQiita } from '../services/getItemsFromQiita';
+import { formatZennArticles } from '../functions/formatZennArticles';
+import { formatQiitaArticles } from '../functions/formatQiitaArticles';
 import Layout from '../layouts/Layout.astro';
-import { fetchQiitaArticles } from '../lib/qiita';
 
-const articles = [];
+const zennArticles = await getItemsFromZenn(5);
+const qiitaArticles = await getItemsFromQiita(5);
+const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qiitaArticles)].sort(
+  (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+);
 ---
 
 <Layout>
   <main class="container mx-auto px-4 py-8">
-    <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <li>
-        <Card
-          title="【JavaScript】MDNが推奨する最強の書き方"
-          url="https://qiita.com/sio-iruka/items/837037317f1d86dd7642"
-          name="TechForGood"
-          createdAt="2025-04-11T09:43:48.476+09:00"
-          likesCount={133}
-        />
-      </li>
-      <li>
-        <Card
-          title="【JavaScript】MDNが推奨する最強の書き方"
-          url="https://qiita.com/sio-iruka/items/837037317f1d86dd7642"
-          name="TechForGood"
-          createdAt="2025-04-11T09:43:48.476+09:00"
-          likesCount={133}
-        />
-      </li>
-      <li>
-        <Card
-          title="【JavaScript】MDNが推奨する最強の書き方"
-          url="https://qiita.com/sio-iruka/items/837037317f1d86dd7642"
-          name="TechForGood"
-          createdAt="2025-04-11T09:43:48.476+09:00"
-          likesCount={133}
-        />
-      </li>
+    <ul class="grid grid-cols-1 gap-4">
+      {
+        articles.map(({ title, url, name, createdAt, likesCount, site }) => (
+          <li>
+            <Card
+              title={title}
+              url={url}
+              name={name}
+              createdAt={createdAt}
+              likesCount={likesCount}
+              site={site}
+            />
+          </li>
+        ))
+      }
     </ul>
   </main>
 </Layout>

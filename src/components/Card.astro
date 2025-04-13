@@ -1,6 +1,7 @@
 ---
+import type { ICard } from '../types';
 interface Props extends ICard {}
-const { title, name, url, createdAt, likesCount } = Astro.props;
+const { title, name, url, createdAt, likesCount, site } = Astro.props;
 import HeartIcon from '../assets/heart.svg';
 ---
 
@@ -8,14 +9,35 @@ import HeartIcon from '../assets/heart.svg';
   href={url}
   target="_blank"
   rel="noopener noreferrer"
-  class="block p-4 bg-white dark:bg-gray-800 rounded-md shadow-sm hover:shadow-md dark:shadow-gray-700/30 dark:hover:shadow-gray-700/50 transition-shadow duration-200 border border-gray-100 dark:border-gray-700"
+  class="block p-4 bg-white dark:bg-gray-800 rounded-md shadow-sm hover:shadow-md dark:shadow-gray-700/30 dark:hover:shadow-gray-700/50 transition-all duration-200 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-200 dark:hover:border-gray-600"
 >
-  <h2 class="text-base font-bold text-gray-800 dark:text-gray-100 mb-1 line-clamp-1">{title}</h2>
-  <p class="text-xs text-gray-600 dark:text-gray-400">@{name}</p>
-  <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+  <div class="flex justify-between">
+    <h2
+      class="text-base font-bold text-gray-800 dark:text-gray-100 mb-1 line-clamp-1 group-hover:text-gray-900 dark:group-hover:text-white transition-colors"
+    >
+      {title}
+    </h2>
+    <p
+      class="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
+    >
+      {site}
+    </p>
+  </div>
+  <p
+    class="text-xs text-gray-600 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors"
+  >
+    @{name}
+  </p>
+  <div
+    class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
+  >
     <p>{createdAt}</p>
     <p class="flex items-center gap-1">
-      <HeartIcon width={16} height={16} class="text-gray-500 dark:text-gray-400" />
+      <HeartIcon
+        width={16}
+        height={16}
+        class="text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
+      />
       {likesCount}
     </p>
   </div>

@@ -7,4 +7,8 @@ interface ICard {
   name: string;
   createdAt: string;
   likesCount: number;
+  site: 'zenn' | 'qiita';
 }
+
+export type { ICard };
+export * from './zenn';
