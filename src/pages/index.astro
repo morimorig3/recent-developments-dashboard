@@ -33,3 +33,9 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
     </ul>
   </main>
 </Layout>
+
+<script>
+  import { cleanupOldArticles } from '../utils/localStorage';
+  // ページ読み込み時に1度だけ古い既読情報を削除
+  cleanupOldArticles();
+</script>

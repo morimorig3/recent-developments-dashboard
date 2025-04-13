@@ -9,7 +9,8 @@ import HeartIcon from '../assets/heart.svg';
   href={url}
   target="_blank"
   rel="noopener noreferrer"
-  class="block p-4 bg-white dark:bg-gray-800 rounded-md shadow-sm hover:shadow-md dark:shadow-gray-700/30 dark:hover:shadow-gray-700/50 transition-all duration-200 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-200 dark:hover:border-gray-600"
+  class="block p-4 bg-white dark:bg-gray-800 rounded-md shadow-sm hover:shadow-md dark:shadow-gray-700/30 dark:hover:shadow-gray-700/50 transition-all duration-200 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-200 dark:hover:border-gray-600 relative"
+  data-url={url}
 >
   <div class="flex justify-between">
     <h2
@@ -17,11 +18,19 @@ import HeartIcon from '../assets/heart.svg';
     >
       {title}
     </h2>
-    <p
-      class="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
-    >
-      {site}
-    </p>
+    <div class="flex items-center gap-2">
+      <p
+        class="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
+      >
+        {site}
+      </p>
+      <div
+        id="new-icon"
+        class="w-8 h-8 bg-red-500 dark:bg-red-400 text-white text-xs hidden rounded-full grid place-content-center absolute -top-3 -left-3"
+      >
+        new
+      </div>
+    </div>
   </div>
   <p
     class="text-xs text-gray-600 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors"
@@ -44,10 +53,35 @@ import HeartIcon from '../assets/heart.svg';
 </a>
 
 <script>
-  document.querySelectorAll('a').forEach((link) => {
+  import { saveReadArticle, isArticleRead } from '../utils/localStorage';
+
+  // 既読状態の確認と表示
+  document.querySelectorAll('a[data-url]').forEach((link) => {
+    const url = link.getAttribute('data-url');
+    if (!url) return;
+
+    const newIcon = link.querySelector('#new-icon');
+    if (newIcon) {
+      newIcon.classList.toggle('hidden', isArticleRead(url));
+    }
+  });
+
+  // クリック時の処理
+  document.querySelectorAll('a[data-url]').forEach((link) => {
     link.addEventListener('click', (event) => {
+      const url = link.getAttribute('data-url');
+      if (!url) return;
+
       event.preventDefault();
-      window.open(link.href, '_blank');
+      saveReadArticle(url);
+
+      // クリック後にカードの見た目を更新
+      const newIcon = link.querySelector('#new-icon');
+      if (newIcon) {
+        newIcon.classList.add('hidden');
+      }
+
+      window.open(url, '_blank');
     });
   });
 </script>
