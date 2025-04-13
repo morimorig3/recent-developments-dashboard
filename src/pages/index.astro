@@ -6,39 +6,46 @@ const articles = await fetchQiitaArticles();
 ---
 
 <Layout>
-	<main class="container mx-auto px-4 py-8">
-		<h1 class="text-3xl font-bold mb-8">Recent Qiita Articles</h1>
-		<div class="grid gap-6">
-			{articles.map((article) => (
-				<article class="border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
-					<div class="flex items-center gap-4 mb-4">
-						<img
-							src={article.user.profile_image_url}
-							alt={article.user.name}
-							class="w-10 h-10 rounded-full"
-						/>
-						<div>
-							<h2 class="text-xl font-semibold">
-								<a href={article.url} target="_blank" rel="noopener noreferrer" class="hover:text-blue-600">
-									{article.title}
-								</a>
-							</h2>
-							<p class="text-gray-600">by {article.user.name}</p>
-						</div>
-					</div>
-					<div class="flex justify-between text-sm text-gray-500">
-						<span>Posted: {new Date(article.created_at).toLocaleDateString()}</span>
-						<span>❤️ {article.likes_count}</span>
-					</div>
-				</article>
-			))}
-		</div>
-	</main>
+  <main class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Recent Qiita Articles</h1>
+    <div class="grid gap-6">
+      {
+        articles.map((article) => (
+          <article class="border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-4 mb-4">
+              <img
+                src={article.user.profile_image_url}
+                alt={article.user.name}
+                class="w-10 h-10 rounded-full"
+              />
+              <div>
+                <h2 class="text-xl font-semibold">
+                  <a
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="hover:text-blue-600"
+                  >
+                    {article.title}
+                  </a>
+                </h2>
+                <p class="text-gray-600">by {article.user.name}</p>
+              </div>
+            </div>
+            <div class="flex justify-between text-sm text-gray-500">
+              <span>Posted: {new Date(article.created_at).toLocaleDateString()}</span>
+              <span>❤️ {article.likes_count}</span>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </main>
 </Layout>
 
 <style>
-	main {
-		max-width: 800px;
-		margin: 0 auto;
-	}
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+  }
 </style>
