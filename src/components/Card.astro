@@ -1,0 +1,31 @@
+---
+interface Props extends ICard {}
+const { title, name, url, createdAt, likesCount } = Astro.props;
+import HeartIcon from '../assets/heart.svg';
+---
+
+<a
+  href={url}
+  target="_blank"
+  rel="noopener noreferrer"
+  class="block p-4 bg-white dark:bg-gray-800 rounded-md shadow-sm hover:shadow-md dark:shadow-gray-700/30 dark:hover:shadow-gray-700/50 transition-shadow duration-200 border border-gray-100 dark:border-gray-700"
+>
+  <h2 class="text-base font-bold text-gray-800 dark:text-gray-100 mb-1 line-clamp-1">{title}</h2>
+  <p class="text-xs text-gray-600 dark:text-gray-400">@{name}</p>
+  <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+    <p>{createdAt}</p>
+    <p class="flex items-center gap-1">
+      <HeartIcon width={16} height={16} class="text-gray-500 dark:text-gray-400" />
+      {likesCount}
+    </p>
+  </div>
+</a>
+
+<script>
+  document.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      window.open(link.href, '_blank');
+    });
+  });
+</script>

@@ -3,13 +3,15 @@ const to = new Date().getFullYear();
 import ExternalIcon from '../assets/external-link.svg';
 ---
 
-<footer class="w-full bg-gray-100 text-gray-500 flex justify-center gap-x-4 py-1">
+<footer
+  class="w-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 flex justify-center gap-x-4 py-1"
+>
   <span>© 2022 - {to} morimorig3</span>
   <a
     href="https://github.com/morimorig3/recent-developments-dashboard"
     target="_blank"
     rel="noopener noreferrer"
-    class="text-gray-500 flex items-center gap-x-1 hover:underline"
+    class="text-gray-500 dark:text-gray-400 flex items-center gap-x-1 hover:underline"
   >
     GitHub
     <ExternalIcon width={16} height={16} />

@@ -2,10 +2,12 @@
 const lastUpdated = new Date().toLocaleString();
 ---
 
-<header class="w-full bg-gray-100 px-8 py-2 flex justify-between items-center">
+<header class="w-full bg-gray-100 dark:bg-gray-800 px-8 py-2 flex justify-between items-center">
   <div>
-    <h1 class="font-bold text-gray-800">がんばらない技術キャッチアップ</h1>
-    <p class="text-sm text-gray-500">毎日10件だけがんばろう</p>
+    <h1 class="font-bold text-gray-800 dark:text-gray-100">がんばらない技術キャッチアップ</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400">毎日10件だけがんばろう</p>
   </div>
-  <p class="text-gray-500">最終更新日時: {lastUpdated}</p>
+  <div class="flex items-center gap-4">
+    <p class="text-gray-500 dark:text-gray-400">最終更新日時: {lastUpdated}</p>
+  </div>
 </header>
