@@ -2,7 +2,7 @@
 
 ![キャプチャ](./resources/screenshot.png)
 
-https://morimorig3.github.io/recent-developments-dashboard/
+https://recent-developments-dashboard.vercel.app/
 
 技術キャッチアップが苦手な人向けに作ってみたアプリケーション
 
@@ -39,9 +39,10 @@ API仕様書は公開されていないので、正確ではないし変更さ�
 
 - Astro使用してみた
 - ほぼAIにコーディングしてもらいました（Cursorエディター）
+- 要約をAIに生成させる
 
 ほぼAIのレビューしてるだけだったのでタイピング量かなり減って時代を感じた
-
 平気で正しそうな嘘コード作ってくるので面倒見てあげる必要はある
-
 無理させすぎない方がいい回答出してくれる
+
+AIに生成させた文章を静的サイトとして公開するのはアリなのか少し不安なのでこの機能は廃止するかもしれない
