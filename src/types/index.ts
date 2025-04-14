@@ -1,7 +1,7 @@
 /**
  * カードコンポーネント インターフェース
  */
-interface ICard {
+export interface ICard {
   title: string;
   url: string;
   name: string;
@@ -10,5 +10,9 @@ interface ICard {
   site: 'zenn' | 'qiita';
 }
 
-export type { ICard };
+export interface Summary {
+  title: string;
+  body: string;
+}
+
 export * from './zenn';
