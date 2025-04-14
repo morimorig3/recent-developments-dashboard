@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "astro",
+  "crons": [
+    {
+      "path": "/api/deploy",
+      "schedule": "0 19 * * *"
+    }
+  ]
+}
