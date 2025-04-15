@@ -1,40 +1,33 @@
 import type { APIRoute } from 'astro';
+import { Vercel } from '@vercel/sdk';
+
+const vercel = new Vercel({
+  bearerToken: import.meta.env.VERCEL_TOKEN,
+});
 
 export const GET: APIRoute = async () => {
   try {
-    const response = await fetch('https://api.vercel.com/v13/deployments', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${import.meta.env.VERCEL_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const createResponse = await vercel.deployments.createDeployment({
+      requestBody: {
         name: 'recent-developments-dashboard',
-        project: import.meta.env.VERCEL_PROJECT_ID,
         target: 'production',
         gitSource: {
           type: 'github',
-          repoId: import.meta.env.VERCEL_GIT_REPO_ID,
+          repoId: 'recent-developments-dashboard',
           ref: 'main',
-          sha: import.meta.env.VERCEL_GIT_COMMIT_SHA,
+          org: 'morimorig3',
         },
-        files: [],
-        projectSettings: {
-          buildCommand: 'npm run build',
-          installCommand: 'npm install',
-          outputDirectory: 'dist',
-          framework: 'astro',
-        },
-      }),
+        // projectSettings: {
+        //   buildCommand: 'npm run build',
+        //   installCommand: 'npm install',
+        //   outputDirectory: 'dist',
+        //   framework: 'astro',
+        // },
+      },
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(JSON.stringify(error));
-    }
-
-    const deployment = await response.json();
-    return new Response(JSON.stringify({ success: true, deployment }), {
+    console.log(`Deployment created: ID ${createResponse.id} and status ${createResponse.status}`);
+    return new Response(JSON.stringify({ success: true, createResponse }), {
       status: 200,
     });
   } catch (error) {
