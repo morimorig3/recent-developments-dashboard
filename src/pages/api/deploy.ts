@@ -13,7 +13,7 @@ export const GET: APIRoute = async () => {
         target: 'production',
         gitSource: {
           type: 'github',
-          repoId: 'recent-developments-dashboard',
+          repoId: '964910633',
           ref: 'main',
           org: 'morimorig3',
         },
