@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 
-export const POST: APIRoute = async ({ request }) => {
+export const GET: APIRoute = async () => {
   try {
     const response = await fetch('https://api.vercel.com/v13/deployments', {
       method: 'POST',
