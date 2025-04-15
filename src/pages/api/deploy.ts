@@ -17,12 +17,6 @@ export const GET: APIRoute = async () => {
           ref: 'main',
           org: 'morimorig3',
         },
-        // projectSettings: {
-        //   buildCommand: 'npm run build',
-        //   installCommand: 'npm install',
-        //   outputDirectory: 'dist',
-        //   framework: 'astro',
-        // },
       },
     });
 
