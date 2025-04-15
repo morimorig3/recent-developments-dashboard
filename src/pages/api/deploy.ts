@@ -2,29 +2,44 @@ import type { APIRoute } from 'astro';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    // Vercelのデプロイメントをトリガー
-    const response = await fetch('https://api.vercel.com/v1/deployments', {
+    const response = await fetch('https://api.vercel.com/v13/deployments', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
+        Authorization: `Bearer ${import.meta.env.VERCEL_TOKEN}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         name: 'recent-developments-dashboard',
+        project: import.meta.env.VERCEL_PROJECT_ID,
+        target: 'production',
+        gitSource: {
+          type: 'github',
+          repoId: import.meta.env.VERCEL_GIT_REPO_ID,
+          ref: 'main',
+          sha: import.meta.env.VERCEL_GIT_COMMIT_SHA,
+        },
         files: [],
-        project: process.env.VERCEL_PROJECT_ID,
+        projectSettings: {
+          buildCommand: 'npm run build',
+          installCommand: 'npm install',
+          outputDirectory: 'dist',
+          framework: 'astro',
+        },
       }),
     });
 
     if (!response.ok) {
-      throw new Error('Deployment failed');
+      const error = await response.json();
+      throw new Error(JSON.stringify(error));
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    const deployment = await response.json();
+    return new Response(JSON.stringify({ success: true, deployment }), {
       status: 200,
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: 'Deployment failed' }), {
+    console.error('Deployment error:', error);
+    return new Response(JSON.stringify({ error: String(error) }), {
       status: 500,
     });
   }
