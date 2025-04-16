@@ -51,6 +51,7 @@ ${html}
     return summaries;
   } catch (error) {
     console.error('Error in getSummaryFromUrl:', error);
-    throw error;
+    // エラーを投げずに空の配列を返す
+    return [];
   }
 };
