@@ -6,11 +6,11 @@ interface ReadArticle {
 }
 
 /**
- * 1週間以上経過した記事を削除する
+ * 3日以上経過した記事を削除する
  */
 export const cleanupOldArticles = (): void => {
   const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 3);
 
   const readArticles = getReadArticles();
   const filteredArticles = readArticles.filter((article) => {
