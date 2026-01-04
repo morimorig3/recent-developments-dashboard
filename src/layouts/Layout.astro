@@ -2,6 +2,11 @@
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import '../styles/global.css';
+
+const title = 'がんばらない技術キャッチアップ';
+const description = 'QiitaとZennの注目記事を厳選して毎日更新。技術キャッチアップが苦手な人向けに、質の高い記事だけを少数表示するダッシュボード。';
+const siteUrl = 'https://recent-developments-dashboard.vercel.app';
+const ogImage = `${siteUrl}/og-image.png`;
 ---
 
 <!doctype html>
@@ -11,7 +16,37 @@ import '../styles/global.css';
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
-    <title>がんばらない技術キャッチアップ</title>
+
+    <!-- SEO -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href={siteUrl} />
+    <meta name="theme-color" content="#1f2937" />
+
+    <!-- OGP -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={siteUrl} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:site_name" content={title} />
+    <meta property="og:locale" content="ja_JP" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- Google Analytics (GA4) -->
+    <script type="text/partytown" src="https://www.googletagmanager.com/gtag/js?id=G-HTRQEVVEK2"></script>
+    <script type="text/partytown">
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-HTRQEVVEK2');
+    </script>
   </head>
   <body class="bg-white dark:bg-gray-900">
     <Header />
