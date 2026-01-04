@@ -168,6 +168,9 @@ const summary = await getSummaryFromUrl(url);
       if (newIcon) {
         newIcon.classList.add('hidden');
       }
+
+      // フィルタを再適用するためのカスタムイベントを発火
+      window.dispatchEvent(new CustomEvent('article-read', { detail: { url } }));
     });
   });
 </script>

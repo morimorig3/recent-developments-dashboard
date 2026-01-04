@@ -16,10 +16,72 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
 
 <Layout>
   <main class="container mx-auto px-4 py-8">
-    <ul class="grid grid-cols-1 gap-4">
+    <!-- フィルタボタン -->
+    <div class="mb-6 flex flex-wrap items-center gap-4">
+      <!-- サイトフィルタ -->
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-600 dark:text-gray-400">サイト:</span>
+        <div class="flex gap-1" role="group" aria-label="サイトフィルタ">
+          <button
+            data-site-filter="all"
+            aria-pressed="true"
+            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-gray-800 text-white dark:bg-white dark:text-gray-800 transition-colors"
+          >
+            すべて
+          </button>
+          <button
+            data-site-filter="qiita"
+            aria-pressed="false"
+            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            Qiita
+          </button>
+          <button
+            data-site-filter="zenn"
+            aria-pressed="false"
+            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            Zenn
+          </button>
+        </div>
+      </div>
+
+      <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 hidden sm:block"></div>
+
+      <!-- 既読/未読フィルタ -->
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-600 dark:text-gray-400">状態:</span>
+        <div class="flex gap-1" role="group" aria-label="既読状態フィルタ">
+          <button
+            data-read-filter="all"
+            aria-pressed="true"
+            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-gray-800 text-white dark:bg-white dark:text-gray-800 transition-colors"
+          >
+            すべて
+          </button>
+          <button
+            data-read-filter="unread"
+            aria-pressed="false"
+            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            未読
+          </button>
+          <button
+            data-read-filter="read"
+            aria-pressed="false"
+            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            既読
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 記事一覧 -->
+    <ul id="article-list" class="grid grid-cols-1 gap-4">
       {
         articles.map(({ title, url, name, createdAt, likesCount, site }) => (
-          <li>
+          <li data-site={site} data-url={url}>
             <Card
               title={title}
               url={url}
@@ -32,11 +94,122 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
         ))
       }
     </ul>
+
+    <!-- フィルタ結果が0件の場合 -->
+    <p id="no-results" class="hidden text-center text-gray-500 dark:text-gray-400 py-8">
+      該当する記事がありません
+    </p>
   </main>
 </Layout>
 
 <script>
-  import { cleanupOldArticles } from '../utils/localStorage';
+  import { cleanupOldArticles, isArticleRead } from '../utils/localStorage';
+
   // ページ読み込み時に1度だけ古い既読情報を削除
   cleanupOldArticles();
+
+  // フィルタ状態の型定義
+  type ArticleSite = 'qiita' | 'zenn';
+  type SiteFilter = 'all' | ArticleSite;
+  type ReadFilter = 'all' | 'unread' | 'read';
+
+  let currentSiteFilter: SiteFilter = 'all';
+  let currentReadFilter: ReadFilter = 'all';
+
+  const articleList = document.getElementById('article-list');
+  const noResults = document.getElementById('no-results');
+  const siteFilterButtons = document.querySelectorAll<HTMLButtonElement>('[data-site-filter]');
+  const readFilterButtons = document.querySelectorAll<HTMLButtonElement>('[data-read-filter]');
+
+  // アクティブなボタンのスタイルを適用
+  const activeClass = 'bg-gray-800 text-white dark:bg-white dark:text-gray-800';
+  const inactiveClass =
+    'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700';
+
+  function updateButtonStyles(
+    buttons: NodeListOf<HTMLButtonElement>,
+    activeValue: string,
+    dataAttr: 'siteFilter' | 'readFilter'
+  ) {
+    buttons.forEach((btn) => {
+      const value = btn.dataset[dataAttr];
+      const isActive = value === activeValue;
+
+      // クラスをリセットして適用
+      activeClass.split(' ').forEach((c) => btn.classList.toggle(c, isActive));
+      inactiveClass.split(' ').forEach((c) => btn.classList.toggle(c, !isActive));
+
+      // aria-pressed属性を更新
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+  }
+
+  function applyFilters() {
+    if (!articleList || !noResults) return;
+
+    const items = articleList.querySelectorAll<HTMLLIElement>('li[data-site]');
+    let visibleCount = 0;
+
+    items.forEach((item) => {
+      const site = item.dataset.site as ArticleSite;
+      const url = item.dataset.url || '';
+      const isRead = isArticleRead(url);
+
+      // サイトフィルタのチェック
+      const siteMatch = currentSiteFilter === 'all' || site === currentSiteFilter;
+
+      // 既読/未読フィルタのチェック
+      const readMatch =
+        currentReadFilter === 'all' ||
+        (currentReadFilter === 'unread' && !isRead) ||
+        (currentReadFilter === 'read' && isRead);
+
+      const isVisible = siteMatch && readMatch;
+      item.classList.toggle('hidden', !isVisible);
+
+      if (isVisible) visibleCount++;
+    });
+
+    // 0件メッセージの表示/非表示
+    noResults.classList.toggle('hidden', visibleCount > 0);
+  }
+
+  // フィルタ値のバリデーション
+  function isValidSiteFilter(value: string | undefined): value is SiteFilter {
+    return value === 'all' || value === 'qiita' || value === 'zenn';
+  }
+
+  function isValidReadFilter(value: string | undefined): value is ReadFilter {
+    return value === 'all' || value === 'unread' || value === 'read';
+  }
+
+  // サイトフィルタボタンのイベント
+  siteFilterButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const value = btn.dataset.siteFilter;
+      if (isValidSiteFilter(value)) {
+        currentSiteFilter = value;
+        updateButtonStyles(siteFilterButtons, currentSiteFilter, 'siteFilter');
+        applyFilters();
+      }
+    });
+  });
+
+  // 既読/未読フィルタボタンのイベント
+  readFilterButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const value = btn.dataset.readFilter;
+      if (isValidReadFilter(value)) {
+        currentReadFilter = value;
+        updateButtonStyles(readFilterButtons, currentReadFilter, 'readFilter');
+        applyFilters();
+      }
+    });
+  });
+
+  // 記事クリック時にフィルタを再適用（既読状態が変わるため）
+  window.addEventListener('article-read', () => applyFilters());
+
+  // 初期状態でフィルタを適用（既読状態を反映）
+  applyFilters();
 </script>
