@@ -45,8 +45,12 @@ export const saveReadArticle = (url: string): void => {
  * @returns 既読記事のURL一覧
  */
 export const getReadArticles = (): ReadArticle[] => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  return stored ? JSON.parse(stored) : [];
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
 };
 
 /**
@@ -57,4 +61,56 @@ export const getReadArticles = (): ReadArticle[] => {
 export const isArticleRead = (url: string): boolean => {
   const readArticles = getReadArticles();
   return readArticles.some((article) => article.url === url);
+};
+
+// ブックマーク機能
+const BOOKMARK_KEY = 'bookmarked_articles';
+
+interface BookmarkedArticle {
+  url: string;
+  title: string;
+  bookmarkedAt: string;
+}
+
+/**
+ * ブックマークをトグルする
+ * @param url 記事のURL
+ * @param title 記事のタイトル
+ * @returns ブックマーク追加の場合はtrue、解除の場合はfalse
+ */
+export const toggleBookmark = (url: string, title: string): boolean => {
+  const bookmarks = getBookmarks();
+  const existingIndex = bookmarks.findIndex((b) => b.url === url);
+
+  if (existingIndex >= 0) {
+    bookmarks.splice(existingIndex, 1);
+    localStorage.setItem(BOOKMARK_KEY, JSON.stringify(bookmarks));
+    return false;
+  } else {
+    bookmarks.push({ url, title, bookmarkedAt: new Date().toISOString() });
+    localStorage.setItem(BOOKMARK_KEY, JSON.stringify(bookmarks));
+    return true;
+  }
+};
+
+/**
+ * ブックマーク一覧を取得する
+ * @returns ブックマーク一覧
+ */
+export const getBookmarks = (): BookmarkedArticle[] => {
+  try {
+    const data = localStorage.getItem(BOOKMARK_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * 記事がブックマーク済みかどうかを判定する
+ * @param url 記事のURL
+ * @returns ブックマーク済みの場合はtrue
+ */
+export const isBookmarked = (url: string): boolean => {
+  return getBookmarks().some((b) => b.url === url);
 };

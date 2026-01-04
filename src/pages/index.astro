@@ -78,6 +78,29 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
 
       <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 hidden sm:block"></div>
 
+      <!-- ブックマークフィルタ -->
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-600 dark:text-gray-400">ブックマーク:</span>
+        <div class="flex gap-1" role="group" aria-label="ブックマークフィルタ">
+          <button
+            data-bookmark-filter="all"
+            aria-pressed="true"
+            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-gray-800 text-white dark:bg-white dark:text-gray-800 transition-colors"
+          >
+            すべて
+          </button>
+          <button
+            data-bookmark-filter="bookmarked"
+            aria-pressed="false"
+            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            ブックマーク済み
+          </button>
+        </div>
+      </div>
+
+      <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 hidden sm:block"></div>
+
       <!-- ソート -->
       <div class="flex items-center gap-2">
         <span class="text-sm text-gray-600 dark:text-gray-400">並び替え:</span>
@@ -126,7 +149,7 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
 </Layout>
 
 <script>
-  import { cleanupOldArticles, isArticleRead } from '../utils/localStorage';
+  import { cleanupOldArticles, isArticleRead, isBookmarked } from '../utils/localStorage';
 
   // ページ読み込み時に1度だけ古い既読情報を削除
   cleanupOldArticles();
@@ -135,16 +158,19 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
   type ArticleSite = 'qiita' | 'zenn';
   type SiteFilter = 'all' | ArticleSite;
   type ReadFilter = 'all' | 'unread' | 'read';
+  type BookmarkFilter = 'all' | 'bookmarked';
   type SortOption = 'date' | 'likes';
 
   let currentSiteFilter: SiteFilter = 'all';
   let currentReadFilter: ReadFilter = 'all';
+  let currentBookmarkFilter: BookmarkFilter = 'all';
   let currentSort: SortOption = 'date';
 
   const articleList = document.getElementById('article-list');
   const noResults = document.getElementById('no-results');
   const siteFilterButtons = document.querySelectorAll<HTMLButtonElement>('[data-site-filter]');
   const readFilterButtons = document.querySelectorAll<HTMLButtonElement>('[data-read-filter]');
+  const bookmarkFilterButtons = document.querySelectorAll<HTMLButtonElement>('[data-bookmark-filter]');
   const sortButtons = document.querySelectorAll<HTMLButtonElement>('[data-sort]');
 
   // アクティブなボタンのスタイルを適用
@@ -155,7 +181,7 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
   function updateButtonStyles(
     buttons: NodeListOf<HTMLButtonElement>,
     activeValue: string,
-    dataAttr: 'siteFilter' | 'readFilter' | 'sort'
+    dataAttr: 'siteFilter' | 'readFilter' | 'sort' | 'bookmarkFilter'
   ) {
     buttons.forEach((btn) => {
       const value = btn.dataset[dataAttr];
@@ -180,6 +206,7 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
       const site = item.dataset.site as ArticleSite;
       const url = item.dataset.url || '';
       const isRead = isArticleRead(url);
+      const bookmarked = isBookmarked(url);
 
       // サイトフィルタのチェック
       const siteMatch = currentSiteFilter === 'all' || site === currentSiteFilter;
@@ -190,7 +217,10 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
         (currentReadFilter === 'unread' && !isRead) ||
         (currentReadFilter === 'read' && isRead);
 
-      const isVisible = siteMatch && readMatch;
+      // ブックマークフィルタのチェック
+      const bookmarkMatch = currentBookmarkFilter === 'all' || bookmarked;
+
+      const isVisible = siteMatch && readMatch && bookmarkMatch;
       item.classList.toggle('hidden', !isVisible);
 
       if (isVisible) visibleCount++;
@@ -211,6 +241,10 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
 
   function isValidSortOption(value: string | undefined): value is SortOption {
     return value === 'date' || value === 'likes';
+  }
+
+  function isValidBookmarkFilter(value: string | undefined): value is BookmarkFilter {
+    return value === 'all' || value === 'bookmarked';
   }
 
   function applySort() {
@@ -257,6 +291,18 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
     });
   });
 
+  // ブックマークフィルタボタンのイベント
+  bookmarkFilterButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const value = btn.dataset.bookmarkFilter;
+      if (isValidBookmarkFilter(value)) {
+        currentBookmarkFilter = value;
+        updateButtonStyles(bookmarkFilterButtons, currentBookmarkFilter, 'bookmarkFilter');
+        applyFilters();
+      }
+    });
+  });
+
   // ソートボタンのイベント
   sortButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -271,6 +317,9 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
 
   // 記事クリック時にフィルタを再適用（既読状態が変わるため）
   window.addEventListener('article-read', () => applyFilters());
+
+  // ブックマーク変更時にフィルタを再適用
+  window.addEventListener('bookmark-changed', () => applyFilters());
 
   // 初期状態でフィルタを適用（既読状態を反映）
   applyFilters();
