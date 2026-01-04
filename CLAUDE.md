@@ -9,11 +9,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev      # 開発サーバー起動
-npm run build    # プロダクションビルド
-npm run preview  # ビルド結果のプレビュー
-npm run lint     # ESLint実行（自動修正付き）
-npm run format   # Prettier実行
+npm run dev         # 開発サーバー起動
+npm run build       # プロダクションビルド
+npm run preview     # ビルド結果のプレビュー
+npm run lint        # ESLint実行（自動修正付き）
+npm run format      # Prettier実行
+npm run generate:og # OGP画像生成
 ```
 
 ## Architecture
@@ -46,10 +47,11 @@ src/
 ```
 
 ### Data Flow
-1. ビルド時に`index.astro`がQiita/Zenn APIから記事を取得
-2. 各記事に対してGemini APIで要約を生成
-3. 記事データを`ICard`型に正規化してソート
+1. ビルド時に`index.astro`がQiita/Zenn APIから記事を取得（各5件、計10件）
+2. 各記事に対してGemini APIで要約を生成（Card.astro内）
+3. 記事データを`ICard`型に正規化し、作成日時でソート
 4. クライアント側でlocalStorageを使い既読状態を管理
+5. サイト別・既読状態のフィルタリング、ソートをクライアントサイドで実行
 
 ### API Endpoints Used
 - Qiita: `https://qiita.com/api/v2/items` (過去1週間で40ストック以上)

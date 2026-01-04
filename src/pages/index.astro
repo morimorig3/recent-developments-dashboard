@@ -10,7 +10,7 @@ import Layout from '../layouts/Layout.astro';
 const zennArticles = await getItemsFromZenn(5);
 const qiitaArticles = await getItemsFromQiita(5);
 const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qiitaArticles)].sort(
-  (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  (a, b) => new Date(b.createdAtRaw).getTime() - new Date(a.createdAtRaw).getTime(),
 );
 ---
 
@@ -75,13 +75,36 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
           </button>
         </div>
       </div>
+
+      <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 hidden sm:block"></div>
+
+      <!-- ソート -->
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-600 dark:text-gray-400">並び替え:</span>
+        <div class="flex gap-1" role="group" aria-label="並び替え">
+          <button
+            data-sort="date"
+            aria-pressed="true"
+            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-gray-800 text-white dark:bg-white dark:text-gray-800 transition-colors"
+          >
+            新着順
+          </button>
+          <button
+            data-sort="likes"
+            aria-pressed="false"
+            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            いいね数順
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- 記事一覧 -->
     <ul id="article-list" class="grid grid-cols-1 gap-4">
       {
-        articles.map(({ title, url, name, createdAt, likesCount, site }) => (
-          <li data-site={site} data-url={url}>
+        articles.map(({ title, url, name, createdAt, createdAtRaw, likesCount, site }) => (
+          <li data-site={site} data-url={url} data-created-at={createdAtRaw} data-likes-count={likesCount}>
             <Card
               title={title}
               url={url}
@@ -108,18 +131,21 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
   // ページ読み込み時に1度だけ古い既読情報を削除
   cleanupOldArticles();
 
-  // フィルタ状態の型定義
+  // フィルタ・ソート状態の型定義
   type ArticleSite = 'qiita' | 'zenn';
   type SiteFilter = 'all' | ArticleSite;
   type ReadFilter = 'all' | 'unread' | 'read';
+  type SortOption = 'date' | 'likes';
 
   let currentSiteFilter: SiteFilter = 'all';
   let currentReadFilter: ReadFilter = 'all';
+  let currentSort: SortOption = 'date';
 
   const articleList = document.getElementById('article-list');
   const noResults = document.getElementById('no-results');
   const siteFilterButtons = document.querySelectorAll<HTMLButtonElement>('[data-site-filter]');
   const readFilterButtons = document.querySelectorAll<HTMLButtonElement>('[data-read-filter]');
+  const sortButtons = document.querySelectorAll<HTMLButtonElement>('[data-sort]');
 
   // アクティブなボタンのスタイルを適用
   const activeClass = 'bg-gray-800 text-white dark:bg-white dark:text-gray-800';
@@ -129,7 +155,7 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
   function updateButtonStyles(
     buttons: NodeListOf<HTMLButtonElement>,
     activeValue: string,
-    dataAttr: 'siteFilter' | 'readFilter'
+    dataAttr: 'siteFilter' | 'readFilter' | 'sort'
   ) {
     buttons.forEach((btn) => {
       const value = btn.dataset[dataAttr];
@@ -183,6 +209,30 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
     return value === 'all' || value === 'unread' || value === 'read';
   }
 
+  function isValidSortOption(value: string | undefined): value is SortOption {
+    return value === 'date' || value === 'likes';
+  }
+
+  function applySort() {
+    if (!articleList) return;
+
+    const items = Array.from(articleList.querySelectorAll<HTMLLIElement>('li[data-site]'));
+
+    items.sort((a, b) => {
+      if (currentSort === 'date') {
+        const dateA = new Date(a.dataset.createdAt || '').getTime() || 0;
+        const dateB = new Date(b.dataset.createdAt || '').getTime() || 0;
+        return dateB - dateA;
+      } else {
+        const likesA = parseInt(a.dataset.likesCount || '0', 10);
+        const likesB = parseInt(b.dataset.likesCount || '0', 10);
+        return likesB - likesA;
+      }
+    });
+
+    items.forEach((item) => articleList.appendChild(item));
+  }
+
   // サイトフィルタボタンのイベント
   siteFilterButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -203,6 +253,18 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
         currentReadFilter = value;
         updateButtonStyles(readFilterButtons, currentReadFilter, 'readFilter');
         applyFilters();
+      }
+    });
+  });
+
+  // ソートボタンのイベント
+  sortButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const value = btn.dataset.sort;
+      if (isValidSortOption(value)) {
+        currentSort = value;
+        updateButtonStyles(sortButtons, currentSort, 'sort');
+        applySort();
       }
     });
   });

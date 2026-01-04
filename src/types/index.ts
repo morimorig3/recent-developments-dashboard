@@ -6,6 +6,7 @@ export interface ICard {
   url: string;
   name: string;
   createdAt: string;
+  createdAtRaw: string;
   likesCount: number;
   site: 'zenn' | 'qiita';
 }

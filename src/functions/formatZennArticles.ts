@@ -12,6 +12,7 @@ export const formatZennArticles = (articles: ZennArticle[]): ICard[] => {
     url: `https://zenn.dev${article.path}`,
     name: article.user.name,
     createdAt: formatDate(article.published_at),
+    createdAtRaw: article.published_at,
     likesCount: article.liked_count,
     site: 'zenn',
   }));

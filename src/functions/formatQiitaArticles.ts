@@ -13,6 +13,7 @@ export const formatQiitaArticles = (articles: QiitaArticle[]): ICard[] => {
     url: article.url,
     name: article.user.id,
     createdAt: formatDate(article.created_at),
+    createdAtRaw: article.created_at,
     likesCount: article.likes_count,
     site: 'qiita',
   }));
