@@ -1,10 +1,12 @@
 ---
 export const prerender = true;
 import Card from '../components/Card.astro';
+import DailySummary from '../components/DailySummary.astro';
 import { getItemsFromZenn } from '../services/getItemsFromZenn';
 import { getItemsFromQiita } from '../services/getItemsFromQiita';
 import { formatZennArticles } from '../functions/formatZennArticles';
 import { formatQiitaArticles } from '../functions/formatQiitaArticles';
+import { getDailySummary } from '../services/getDailySummary';
 import Layout from '../layouts/Layout.astro';
 
 const zennArticles = await getItemsFromZenn(5);
@@ -12,6 +14,7 @@ const qiitaArticles = await getItemsFromQiita(5);
 const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qiitaArticles)].sort(
   (a, b) => new Date(b.createdAtRaw).getTime() - new Date(a.createdAtRaw).getTime(),
 );
+const dailySummary = await getDailySummary(articles);
 ---
 
 <Layout>
@@ -122,6 +125,9 @@ const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qi
         </div>
       </div>
     </div>
+
+    <!-- 本日のサマリー -->
+    <DailySummary summary={dailySummary} />
 
     <!-- 記事一覧 -->
     <ul id="article-list" class="grid grid-cols-1 gap-4">

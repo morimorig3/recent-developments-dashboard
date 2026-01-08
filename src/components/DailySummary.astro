@@ -1,0 +1,57 @@
+---
+import type { DailySummary } from '../services/getDailySummary';
+
+interface Props {
+  summary: DailySummary;
+}
+
+const { summary } = Astro.props;
+---
+
+{
+  summary.items.length > 0 && (
+    <section class="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800 rounded-lg border border-blue-100 dark:border-gray-700 overflow-hidden">
+      <div class="px-5 py-4 border-b border-blue-100 dark:border-gray-700">
+        <h2 class="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+          <svg
+            class="w-5 h-5 text-blue-500 dark:text-blue-400"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+            />
+          </svg>
+          みんなが気になっていること
+        </h2>
+      </div>
+      <div class="p-5">
+        <ul class="space-y-3">
+          {summary.items.map((item) => (
+            <li class="flex items-start gap-3">
+              <span class="shrink-0 w-6 h-6 bg-blue-500 dark:bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center mt-0.5">
+                {summary.items.indexOf(item) + 1}
+              </span>
+              <div>
+                <span class="font-semibold text-gray-800 dark:text-gray-100">
+                  {item.topic}
+                </span>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                  {item.description}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-4 text-right">
+          Gemini による分析
+        </p>
+      </div>
+    </section>
+  )
+}

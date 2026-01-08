@@ -11,9 +11,4 @@ export interface ICard {
   site: 'zenn' | 'qiita';
 }
 
-export interface Summary {
-  title: string;
-  body: string;
-}
-
 export * from './zenn';

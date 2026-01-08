@@ -1,10 +1,8 @@
 ---
 import HeartIcon from '../assets/heart.svg';
 import type { ICard } from '../types';
-import { getSummaryFromUrl } from '../services/getSummaryFromUrl';
 interface Props extends ICard {}
 const { title, name, url, createdAt, likesCount, site } = Astro.props;
-const summary = await getSummaryFromUrl(url);
 ---
 
 <div
@@ -83,53 +81,6 @@ const summary = await getSummaryFromUrl(url);
       </p>
     </div>
   </a>
-
-  <!-- 要約部分 -->
-  {
-    summary.length !== 0 && (
-      <div>
-        <div
-          id="summary-content"
-          class="overflow-hidden transition-all duration-200 max-h-0 opacity-0"
-        >
-          <div class="px-4 py-3">
-            <div class="space-y-4">
-              {summary.map(({ title, body }) => (
-                <div class="p-4 bg-gray-50/50 dark:bg-gray-700/30 rounded-md border border-gray-100 dark:border-gray-700">
-                  <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                    {title}
-                  </h3>
-                  <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{body}</p>
-                </div>
-              ))}
-              <p class="text-xs text-gray-500 dark:text-gray-400">※これはGeminiによる生成物です</p>
-            </div>
-          </div>
-        </div>
-        <button
-          id="summary-toggle"
-          class="w-full py-2.5 px-4 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 flex items-center justify-between cursor-pointer border-t border-gray-100 dark:border-gray-700"
-        >
-          <span>要約を見る</span>
-          <svg
-            id="summary-icon"
-            class="w-4 h-4 transition-transform duration-200"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </button>
-      </div>
-    )
-  }
 </div>
 
 <script>
@@ -190,46 +141,11 @@ const summary = await getSummaryFromUrl(url);
     }
   });
 
-  // 要約表示の切り替え
-  document.querySelectorAll('#summary-toggle').forEach((button) => {
-    button.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const summaryContent = button.parentElement?.querySelector('#summary-content');
-      const summaryIcon = button.querySelector('#summary-icon');
-      if (summaryContent) {
-        const isHidden = summaryContent.classList.contains('max-h-0');
-        const buttonText = button.querySelector('span');
-
-        // アニメーション用のクラスを切り替え
-        if (isHidden) {
-          summaryContent.classList.remove('max-h-0', 'opacity-0');
-          summaryContent.classList.add('max-h-[1000px]', 'opacity-100');
-        } else {
-          summaryContent.classList.remove('max-h-[1000px]', 'opacity-100');
-          summaryContent.classList.add('max-h-0', 'opacity-0');
-        }
-
-        if (buttonText) {
-          buttonText.textContent = isHidden ? '要約を隠す' : '要約を見る';
-        }
-        if (summaryIcon) {
-          summaryIcon.classList.toggle('rotate-180', !isHidden);
-        }
-      }
-    });
-  });
-
   // カードクリック時の処理
   document.querySelectorAll('[data-url]').forEach((card) => {
-    card.addEventListener('click', (event) => {
+    card.addEventListener('click', () => {
       const url = card.getAttribute('data-url');
       if (!url) return;
-
-      // 要約ボタンがクリックされた場合は記事を開かない
-      if ((event.target as HTMLElement).closest('#summary-toggle')) {
-        return;
-      }
 
       saveReadArticle(url);
 
