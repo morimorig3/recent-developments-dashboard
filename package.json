@@ -20,6 +20,7 @@
     "@vercel/sdk": "^1.6.2",
     "astro": "^5.6.1",
     "dotenv": "^16.5.0",
+    "fast-xml-parser": "^5.3.3",
     "satori": "^0.18.3",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.1.3"

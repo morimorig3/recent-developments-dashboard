@@ -4,16 +4,21 @@ import Card from '../components/Card.astro';
 import DailySummary from '../components/DailySummary.astro';
 import { getItemsFromZenn } from '../services/getItemsFromZenn';
 import { getItemsFromQiita } from '../services/getItemsFromQiita';
+import { getItemsFromHatena } from '../services/getItemsFromHatena';
 import { formatZennArticles } from '../functions/formatZennArticles';
 import { formatQiitaArticles } from '../functions/formatQiitaArticles';
+import { formatHatenaArticles } from '../functions/formatHatenaArticles';
 import { getDailySummary } from '../services/getDailySummary';
 import Layout from '../layouts/Layout.astro';
 
 const zennArticles = await getItemsFromZenn(5);
 const qiitaArticles = await getItemsFromQiita(5);
-const articles = [...formatZennArticles(zennArticles), ...formatQiitaArticles(qiitaArticles)].sort(
-  (a, b) => new Date(b.createdAtRaw).getTime() - new Date(a.createdAtRaw).getTime(),
-);
+const hatenaArticles = await getItemsFromHatena(5);
+const articles = [
+  ...formatZennArticles(zennArticles),
+  ...formatQiitaArticles(qiitaArticles),
+  ...formatHatenaArticles(hatenaArticles),
+].sort((a, b) => new Date(b.createdAtRaw).getTime() - new Date(a.createdAtRaw).getTime());
 const dailySummary = await getDailySummary(articles);
 ---
 
@@ -45,6 +50,13 @@ const dailySummary = await getDailySummary(articles);
             class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             Zenn
+          </button>
+          <button
+            data-site-filter="hatena"
+            aria-pressed="false"
+            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            Hatena
           </button>
         </div>
       </div>
@@ -161,7 +173,7 @@ const dailySummary = await getDailySummary(articles);
   cleanupOldArticles();
 
   // フィルタ・ソート状態の型定義
-  type ArticleSite = 'qiita' | 'zenn';
+  type ArticleSite = 'qiita' | 'zenn' | 'hatena';
   type SiteFilter = 'all' | ArticleSite;
   type ReadFilter = 'all' | 'unread' | 'read';
   type BookmarkFilter = 'all' | 'bookmarked';
@@ -238,7 +250,7 @@ const dailySummary = await getDailySummary(articles);
 
   // フィルタ値のバリデーション
   function isValidSiteFilter(value: string | undefined): value is SiteFilter {
-    return value === 'all' || value === 'qiita' || value === 'zenn';
+    return value === 'all' || value === 'qiita' || value === 'zenn' || value === 'hatena';
   }
 
   function isValidReadFilter(value: string | undefined): value is ReadFilter {

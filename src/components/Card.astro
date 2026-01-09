@@ -62,11 +62,13 @@ const { title, name, url, createdAt, likesCount, site } = Astro.props;
         </div>
       </div>
     </div>
-    <p
-      class="text-xs text-gray-600 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors"
-    >
-      @{name}
-    </p>
+    {name && (
+      <p
+        class="text-xs text-gray-600 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors"
+      >
+        @{name}
+      </p>
+    )}
     <div
       class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
     >

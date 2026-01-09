@@ -8,7 +8,8 @@ export interface ICard {
   createdAt: string;
   createdAtRaw: string;
   likesCount: number;
-  site: 'zenn' | 'qiita';
+  site: 'zenn' | 'qiita' | 'hatena';
 }
 
 export * from './zenn';
+export * from './hatena';
