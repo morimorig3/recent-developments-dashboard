@@ -33,6 +33,30 @@ const sanitizeTitle = (title: string): string => {
 };
 
 /**
+ * 不完全なJSON配列の修復を試みる
+ * 例: [{"a":1},{"b":2 → [{"a":1}]
+ */
+const tryRepairJson = (text: string): unknown[] | null => {
+  // 配列の開始を確認
+  if (!text.startsWith('[')) return null;
+
+  // 完全なオブジェクトを抽出
+  const objects: unknown[] = [];
+  const regex = /\{[^{}]*"topic"\s*:\s*"[^"]*"\s*,\s*"description"\s*:\s*"[^"]*"\s*\}/g;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    try {
+      objects.push(JSON.parse(match[0]));
+    } catch {
+      // パースできないオブジェクトはスキップ
+    }
+  }
+
+  return objects.length > 0 ? objects : null;
+};
+
+/**
  * DailySummaryItem の型ガード
  */
 const isDailySummaryItem = (item: unknown): item is DailySummaryItem => {
@@ -88,9 +112,15 @@ ${articleList}
       contents: prompt,
       config: {
         temperature: 0,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 4096,
       },
     });
+
+    // finishReasonをチェック
+    const finishReason = result.candidates?.[0]?.finishReason;
+    if (finishReason && finishReason !== 'STOP') {
+      console.warn(`getDailySummary: Unexpected finishReason: ${finishReason}`);
+    }
 
     let responseText = result.text || '';
 
@@ -104,9 +134,16 @@ ${articleList}
     let parsed: unknown;
     try {
       parsed = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('getDailySummary: JSON parse failed. Response:', responseText);
-      return { items: [], generatedAt };
+    } catch {
+      // 不完全なJSONの修復を試みる
+      console.warn('getDailySummary: JSON parse failed, attempting repair...');
+      const repaired = tryRepairJson(responseText);
+      if (repaired) {
+        parsed = repaired;
+      } else {
+        console.error('getDailySummary: JSON repair failed. Response:', responseText);
+        return { items: [], generatedAt };
+      }
     }
 
     if (!Array.isArray(parsed)) {
