@@ -1,7 +1,7 @@
 ---
 import HeartIcon from '../assets/heart.svg';
 import type { ICard } from '../types';
-interface Props extends ICard {}
+interface Props extends Omit<ICard, 'createdAtRaw'> {}
 const { title, name, url, createdAt, likesCount, site } = Astro.props;
 ---
 

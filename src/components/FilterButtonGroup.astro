@@ -1,0 +1,41 @@
+---
+interface Option {
+  value: string;
+  label: string;
+  isDefault?: boolean;
+}
+
+interface Props {
+  label: string;
+  dataAttribute: string;
+  options: Option[];
+  ariaLabel: string;
+}
+
+const { label, dataAttribute, options, ariaLabel } = Astro.props;
+
+const activeClass =
+  'bg-gray-800 text-white dark:bg-white dark:text-gray-800';
+const inactiveClass =
+  'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700';
+---
+
+<div class="flex items-center gap-2">
+  <span class="text-sm text-gray-600 dark:text-gray-400">{label}</span>
+  <div class="flex gap-1" role="group" aria-label={ariaLabel}>
+    {
+      options.map(({ value, label: optionLabel, isDefault }) => (
+        <button
+          {...{ [`data-${dataAttribute}`]: value }}
+          aria-pressed={isDefault ? 'true' : 'false'}
+          class:list={[
+            'px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 transition-colors',
+            isDefault ? activeClass : inactiveClass,
+          ]}
+        >
+          {optionLabel}
+        </button>
+      ))
+    }
+  </div>
+</div>

@@ -2,6 +2,7 @@
 export const prerender = true;
 import Card from '../components/Card.astro';
 import DailySummary from '../components/DailySummary.astro';
+import ArticleFilters from '../components/ArticleFilters.astro';
 import { getItemsFromZenn } from '../services/getItemsFromZenn';
 import { getItemsFromQiita } from '../services/getItemsFromQiita';
 import { getItemsFromHatena } from '../services/getItemsFromHatena';
@@ -11,132 +12,24 @@ import { formatHatenaArticles } from '../functions/formatHatenaArticles';
 import { getDailySummary } from '../services/getDailySummary';
 import Layout from '../layouts/Layout.astro';
 
-const zennArticles = await getItemsFromZenn(5);
-const qiitaArticles = await getItemsFromQiita(5);
-const hatenaArticles = await getItemsFromHatena(5);
+const [zennArticles, qiitaArticles, hatenaArticles] = await Promise.all([
+  getItemsFromZenn(5),
+  getItemsFromQiita(5),
+  getItemsFromHatena(5),
+]);
+
 const articles = [
   ...formatZennArticles(zennArticles),
   ...formatQiitaArticles(qiitaArticles),
   ...formatHatenaArticles(hatenaArticles),
 ].sort((a, b) => new Date(b.createdAtRaw).getTime() - new Date(a.createdAtRaw).getTime());
+
 const dailySummary = await getDailySummary(articles);
 ---
 
 <Layout>
   <main class="container mx-auto px-4 py-8">
-    <!-- フィルタボタン -->
-    <div class="mb-6 flex flex-wrap items-center gap-4">
-      <!-- サイトフィルタ -->
-      <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-600 dark:text-gray-400">サイト:</span>
-        <div class="flex gap-1" role="group" aria-label="サイトフィルタ">
-          <button
-            data-site-filter="all"
-            aria-pressed="true"
-            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-gray-800 text-white dark:bg-white dark:text-gray-800 transition-colors"
-          >
-            すべて
-          </button>
-          <button
-            data-site-filter="qiita"
-            aria-pressed="false"
-            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            Qiita
-          </button>
-          <button
-            data-site-filter="zenn"
-            aria-pressed="false"
-            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            Zenn
-          </button>
-          <button
-            data-site-filter="hatena"
-            aria-pressed="false"
-            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            Hatena
-          </button>
-        </div>
-      </div>
-
-      <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 hidden sm:block"></div>
-
-      <!-- 既読/未読フィルタ -->
-      <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-600 dark:text-gray-400">状態:</span>
-        <div class="flex gap-1" role="group" aria-label="既読状態フィルタ">
-          <button
-            data-read-filter="all"
-            aria-pressed="true"
-            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-gray-800 text-white dark:bg-white dark:text-gray-800 transition-colors"
-          >
-            すべて
-          </button>
-          <button
-            data-read-filter="unread"
-            aria-pressed="false"
-            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            未読
-          </button>
-          <button
-            data-read-filter="read"
-            aria-pressed="false"
-            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            既読
-          </button>
-        </div>
-      </div>
-
-      <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 hidden sm:block"></div>
-
-      <!-- ブックマークフィルタ -->
-      <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-600 dark:text-gray-400">ブックマーク:</span>
-        <div class="flex gap-1" role="group" aria-label="ブックマークフィルタ">
-          <button
-            data-bookmark-filter="all"
-            aria-pressed="true"
-            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-gray-800 text-white dark:bg-white dark:text-gray-800 transition-colors"
-          >
-            すべて
-          </button>
-          <button
-            data-bookmark-filter="bookmarked"
-            aria-pressed="false"
-            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            ブックマーク済み
-          </button>
-        </div>
-      </div>
-
-      <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 hidden sm:block"></div>
-
-      <!-- ソート -->
-      <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-600 dark:text-gray-400">並び替え:</span>
-        <div class="flex gap-1" role="group" aria-label="並び替え">
-          <button
-            data-sort="date"
-            aria-pressed="true"
-            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-gray-800 text-white dark:bg-white dark:text-gray-800 transition-colors"
-          >
-            新着順
-          </button>
-          <button
-            data-sort="likes"
-            aria-pressed="false"
-            class="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            いいね数順
-          </button>
-        </div>
-      </div>
-    </div>
+    <ArticleFilters />
 
     <!-- 本日のサマリー -->
     <DailySummary summary={dailySummary} />
