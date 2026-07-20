@@ -108,7 +108,7 @@ ${articleList}
 - 必ず3つのトピックを出力すること`;
 
     const result = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-flash-latest',
       contents: prompt,
       config: {
         temperature: 0,

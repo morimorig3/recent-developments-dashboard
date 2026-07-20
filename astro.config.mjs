@@ -1,7 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
-import vercel from '@astrojs/vercel/serverless';
+import vercel from '@astrojs/vercel';
 import partytown from '@astrojs/partytown';
 
 // https://astro.build/config
@@ -16,9 +16,6 @@ export default defineConfig({
       },
     }),
   ],
-  experimental: {
-    svg: true,
-  },
   vite: {
     plugins: [tailwindcss()],
   },
