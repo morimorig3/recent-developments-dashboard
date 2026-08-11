@@ -16,5 +16,7 @@ export const formatHatenaArticles = (articles: HatenaArticle[]): ICard[] => {
     createdAtRaw: article.date,
     likesCount: article.bookmarkcount,
     site: 'hatena',
+    category: 'curated',
+    filterKey: 'hatena',
   }));
 };

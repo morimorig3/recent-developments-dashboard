@@ -15,5 +15,7 @@ export const formatZennArticles = (articles: ZennArticle[]): ICard[] => {
     createdAtRaw: article.published_at,
     likesCount: article.liked_count,
     site: 'zenn',
+    category: 'curated',
+    filterKey: 'zenn',
   }));
 };

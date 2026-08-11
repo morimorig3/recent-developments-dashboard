@@ -1,0 +1,141 @@
+---
+import ArticleFilters from './ArticleFilters.astro';
+import Card from './Card.astro';
+import type { ICard } from '../types';
+import type { FilterOption } from '../types/filter';
+
+interface Props {
+  /** タブと紐づくID */
+  panelId: string;
+  /** 未指定ならフィルタ・記事一覧を出さず、スロットの内容だけを描画する */
+  articles?: ICard[];
+  /** 未指定ならサイトフィルタUIを出さない */
+  siteOptions?: FilterOption[];
+  siteLabel?: string;
+  /** 初期状態で非表示にするか */
+  hidden?: boolean;
+}
+
+const { panelId, articles, siteOptions, siteLabel, hidden = false } = Astro.props;
+---
+
+<section
+  id={`panel-${panelId}`}
+  role="tabpanel"
+  aria-labelledby={`tab-${panelId}`}
+  data-article-panel={panelId}
+  class:list={[hidden && 'hidden']}
+>
+  <!-- サマリー等をタブ内の先頭に差し込むためのスロット。articles未指定時はこれだけで内容を構成する -->
+  <slot />
+
+  {
+    articles && (
+      <>
+        {siteOptions && siteLabel && (
+          <ArticleFilters siteOptions={siteOptions} siteLabel={siteLabel} />
+        )}
+
+        <ul data-article-list class="grid grid-cols-1 gap-4">
+          {articles.map(
+            ({ title, url, name, createdAt, createdAtRaw, likesCount, site, category, filterKey }) => (
+              <li
+                data-filter-key={filterKey}
+                data-url={url}
+                data-created-at={createdAtRaw}
+                data-likes-count={likesCount}
+              >
+                <Card
+                  title={title}
+                  url={url}
+                  name={name}
+                  createdAt={createdAt}
+                  likesCount={likesCount}
+                  site={site}
+                  category={category}
+                />
+              </li>
+            ),
+          )}
+        </ul>
+
+        <!-- フィルタ結果が0件の場合 -->
+        <p data-no-results class="hidden text-center text-gray-500 dark:text-gray-400 py-8">
+          該当する記事がありません
+        </p>
+      </>
+    )
+  }
+</section>
+
+<script>
+  import { cleanupOldArticles } from '../utils/localStorage';
+  import { ACTIVE_BUTTON_CLASS, INACTIVE_BUTTON_CLASS } from '../constants/buttonStyles';
+
+  // このモジュール内で1度だけ古い既読情報を削除する。
+  // Card.astro のスクリプトとは別バンドルのため、両者の実行順は保証されない
+  cleanupOldArticles();
+
+  function updateButtonStyles(buttons: NodeListOf<HTMLButtonElement>, activeValue: string) {
+    buttons.forEach((btn) => {
+      const isActive = btn.dataset.siteFilter === activeValue;
+
+      // クラスをリセットして適用
+      ACTIVE_BUTTON_CLASS.split(' ').forEach((c) => btn.classList.toggle(c, isActive));
+      INACTIVE_BUTTON_CLASS.split(' ').forEach((c) => btn.classList.toggle(c, !isActive));
+
+      // aria-pressed属性を更新
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+  }
+
+  /**
+   * 1パネル分のサイトフィルタを設定する。
+   * Astroのコンポーネント内scriptはインスタンスごとではなく1度だけ実行されるため、
+   * 状態はクロージャに閉じ、要素の取得はすべてパネル内スコープに限定する。
+   */
+  function setupPanel(panel: HTMLElement): void {
+    const articleList = panel.querySelector<HTMLUListElement>('[data-article-list]');
+    const noResults = panel.querySelector<HTMLElement>('[data-no-results]');
+    if (!articleList || !noResults) return;
+
+    const siteFilterButtons = panel.querySelectorAll<HTMLButtonElement>('[data-site-filter]');
+    // 選択肢はパネルごとに違うので、実際のボタンから許可値を作る
+    const siteFilterValues = new Set(
+      Array.from(siteFilterButtons).map((btn) => btn.dataset.siteFilter ?? ''),
+    );
+
+    let currentSiteFilter = 'all';
+
+    const applyFilters = () => {
+      const items = articleList.querySelectorAll<HTMLLIElement>('li[data-filter-key]');
+      let visibleCount = 0;
+
+      items.forEach((item) => {
+        const isVisible =
+          currentSiteFilter === 'all' || item.dataset.filterKey === currentSiteFilter;
+        item.classList.toggle('hidden', !isVisible);
+
+        if (isVisible) visibleCount++;
+      });
+
+      // 0件メッセージの表示/非表示
+      noResults.classList.toggle('hidden', visibleCount > 0);
+    };
+
+    siteFilterButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const value = btn.dataset.siteFilter;
+        if (value && siteFilterValues.has(value)) {
+          currentSiteFilter = value;
+          updateButtonStyles(siteFilterButtons, currentSiteFilter);
+          applyFilters();
+        }
+      });
+    });
+
+    applyFilters();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-article-panel]').forEach(setupPanel);
+</script>

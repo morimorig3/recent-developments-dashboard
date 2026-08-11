@@ -1,0 +1,30 @@
+---
+import { PRIMARY_SOURCES } from '../config/primarySources';
+
+const curatedSourceLabels = ['Qiita', 'Zenn', 'はてなブックマーク'];
+const primarySourceLabels = PRIMARY_SOURCES.map((source) => source.label);
+---
+
+<section class="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700">
+  <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">取得先</h2>
+
+  <div class="space-y-3">
+    <div>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mb-1.5">キュレーション記事</p>
+      <ul class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+        {curatedSourceLabels.map((label) => (
+          <li>{label}</li>
+        ))}
+      </ul>
+    </div>
+
+    <div>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mb-1.5">公式情報</p>
+      <ul class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+        {primarySourceLabels.map((label) => (
+          <li>{label}</li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>

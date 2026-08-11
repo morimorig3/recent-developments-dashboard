@@ -1,0 +1,86 @@
+---
+import { ACTIVE_BUTTON_CLASS, INACTIVE_BUTTON_CLASS } from '../constants/buttonStyles';
+import type { SvgComponent } from 'astro/types';
+
+interface Tab {
+  id: string;
+  label: string;
+  count: number;
+  /** タブごとのアイコン。src/assets/ 配下のsvgをimportして渡す */
+  icon: SvgComponent;
+}
+
+interface Props {
+  tabs: Tab[];
+}
+
+const { tabs } = Astro.props;
+---
+
+<div class="mb-6 flex gap-2" role="tablist" aria-label="記事の種類">
+  {
+    tabs.map(({ id, label, count, icon: Icon }, index) => (
+      <button
+        id={`tab-${id}`}
+        role="tab"
+        data-tab-target={id}
+        aria-selected={index === 0 ? 'true' : 'false'}
+        aria-controls={`panel-${id}`}
+        tabindex={index === 0 ? 0 : -1}
+        class:list={[
+          'flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-600 transition-colors cursor-pointer',
+          index === 0 ? ACTIVE_BUTTON_CLASS : INACTIVE_BUTTON_CLASS,
+        ]}
+      >
+        <Icon width={16} height={16} />
+        {label}
+        <span class="text-xs opacity-70">({count})</span>
+      </button>
+    ))
+  }
+</div>
+
+<script>
+  import { ACTIVE_BUTTON_CLASS, INACTIVE_BUTTON_CLASS } from '../constants/buttonStyles';
+
+  const tabButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-tab-target]'));
+
+  /**
+   * WAI-ARIAのtabsパターンに合わせ、選択中のタブだけを Tab キーの到達点にする
+   * (roving tabindex)。タブ間の移動は矢印キーで行う
+   */
+  function selectTab(target: string, moveFocus = false) {
+    tabButtons.forEach((btn) => {
+      const isActive = btn.dataset.tabTarget === target;
+
+      ACTIVE_BUTTON_CLASS.split(' ').forEach((c) => btn.classList.toggle(c, isActive));
+      INACTIVE_BUTTON_CLASS.split(' ').forEach((c) => btn.classList.toggle(c, !isActive));
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      btn.tabIndex = isActive ? 0 : -1;
+
+      if (isActive && moveFocus) btn.focus();
+    });
+
+    document.querySelectorAll<HTMLElement>('[data-article-panel]').forEach((panel) => {
+      panel.classList.toggle('hidden', panel.dataset.articlePanel !== target);
+    });
+  }
+
+  tabButtons.forEach((button, index) => {
+    button.addEventListener('click', () => {
+      const target = button.dataset.tabTarget;
+      if (target) selectTab(target);
+    });
+
+    button.addEventListener('keydown', (event) => {
+      const offset =
+        event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+      if (offset === 0) return;
+
+      event.preventDefault();
+      const next = tabButtons[(index + offset + tabButtons.length) % tabButtons.length];
+      const target = next.dataset.tabTarget;
+      if (target) selectTab(target, true);
+    });
+  });
+</script>
