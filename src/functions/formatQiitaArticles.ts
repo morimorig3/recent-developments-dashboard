@@ -16,5 +16,7 @@ export const formatQiitaArticles = (articles: QiitaArticle[]): ICard[] => {
     createdAtRaw: article.created_at,
     likesCount: article.likes_count,
     site: 'qiita',
+    category: 'curated',
+    filterKey: 'qiita',
   }));
 };

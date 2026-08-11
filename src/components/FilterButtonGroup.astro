@@ -1,23 +1,15 @@
 ---
-interface Option {
-  value: string;
-  label: string;
-  isDefault?: boolean;
-}
+import { ACTIVE_BUTTON_CLASS, INACTIVE_BUTTON_CLASS } from '../constants/buttonStyles';
+import type { FilterOption } from '../types/filter';
 
 interface Props {
   label: string;
   dataAttribute: string;
-  options: Option[];
+  options: FilterOption[];
   ariaLabel: string;
 }
 
 const { label, dataAttribute, options, ariaLabel } = Astro.props;
-
-const activeClass =
-  'bg-gray-800 text-white dark:bg-white dark:text-gray-800';
-const inactiveClass =
-  'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700';
 ---
 
 <div class="flex items-center gap-2">
@@ -30,7 +22,7 @@ const inactiveClass =
           aria-pressed={isDefault ? 'true' : 'false'}
           class:list={[
             'px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 transition-colors',
-            isDefault ? activeClass : inactiveClass,
+            isDefault ? ACTIVE_BUTTON_CLASS : INACTIVE_BUTTON_CLASS,
           ]}
         >
           {optionLabel}

@@ -1,237 +1,88 @@
 ---
 export const prerender = true;
-import Card from '../components/Card.astro';
 import DailySummary from '../components/DailySummary.astro';
-import ArticleFilters from '../components/ArticleFilters.astro';
+import ArticlePanel from '../components/ArticlePanel.astro';
+import TabSwitcher from '../components/TabSwitcher.astro';
+import SourceList from '../components/SourceList.astro';
+import PrimarySourceSection from '../components/PrimarySourceSection.astro';
 import { getItemsFromZenn } from '../services/getItemsFromZenn';
 import { getItemsFromQiita } from '../services/getItemsFromQiita';
 import { getItemsFromHatena } from '../services/getItemsFromHatena';
+import { getItemsFromFeed } from '../services/getItemsFromFeed';
 import { formatZennArticles } from '../functions/formatZennArticles';
 import { formatQiitaArticles } from '../functions/formatQiitaArticles';
 import { formatHatenaArticles } from '../functions/formatHatenaArticles';
+import { formatFeedArticles } from '../functions/formatFeedArticles';
+import { dedupeArticles } from '../functions/dedupeArticles';
+import { groupArticlesBySource } from '../functions/groupArticlesBySource';
 import { getDailySummary } from '../services/getDailySummary';
+import { PRIMARY_SOURCE_MAX_ITEMS, PRIMARY_SOURCES } from '../config/primarySources';
+import type { ICard } from '../types';
 import Layout from '../layouts/Layout.astro';
+import LayersIcon from '../assets/layers.svg';
+import RssIcon from '../assets/rss.svg';
 
-const [zennArticles, qiitaArticles, hatenaArticles] = await Promise.all([
+const [zennArticles, qiitaArticles, hatenaArticles, ...primaryResults] = await Promise.all([
   getItemsFromZenn(5),
   getItemsFromQiita(5),
   getItemsFromHatena(5),
+  ...PRIMARY_SOURCES.map((source) => getItemsFromFeed(source)),
 ]);
 
-const articles = [
+const byDateDesc = (a: ICard, b: ICard) =>
+  new Date(b.createdAtRaw).getTime() - new Date(a.createdAtRaw).getTime();
+
+// キュレーション記事（Hatenaに載ったQiita/Zenn記事の重複をここで排除）
+const curatedArticles = dedupeArticles([
   ...formatZennArticles(zennArticles),
   ...formatQiitaArticles(qiitaArticles),
   ...formatHatenaArticles(hatenaArticles),
-].sort((a, b) => new Date(b.createdAtRaw).getTime() - new Date(a.createdAtRaw).getTime());
+]).sort(byDateDesc);
 
-const dailySummary = await getDailySummary(articles);
+// 公式情報（web.dev と Chrome Developers の重複をここで排除）
+// 全体の上限は設けず、ソースごとにセクション分けして表示する
+const primaryArticles = dedupeArticles(
+  primaryResults.flatMap((items, index) => formatFeedArticles(items, PRIMARY_SOURCES[index])),
+);
+const primaryGroups = groupArticlesBySource(primaryArticles);
+
+// サマリーの入力はキュレーション記事のみ
+const dailySummary = await getDailySummary(curatedArticles);
+
+const curatedSiteOptions = [
+  { value: 'all', label: 'すべて', isDefault: true },
+  { value: 'qiita', label: 'Qiita' },
+  { value: 'zenn', label: 'Zenn' },
+  { value: 'hatena', label: 'Hatena' },
+];
 ---
 
 <Layout>
   <main class="container mx-auto px-4 py-8">
-    <ArticleFilters />
+    <TabSwitcher
+      tabs={[
+        { id: 'curated', label: 'キュレーション記事', count: curatedArticles.length, icon: LayersIcon },
+        { id: 'primary', label: '公式情報', count: primaryArticles.length, icon: RssIcon },
+      ]}
+    />
 
-    <!-- 本日のサマリー -->
-    <DailySummary summary={dailySummary} />
+    <ArticlePanel
+      panelId="curated"
+      articles={curatedArticles}
+      siteOptions={curatedSiteOptions}
+      siteLabel="サイト"
+    >
+      <!-- 本日のサマリー -->
+      <DailySummary summary={dailySummary} />
+    </ArticlePanel>
 
-    <!-- 記事一覧 -->
-    <ul id="article-list" class="grid grid-cols-1 gap-4">
-      {
-        articles.map(({ title, url, name, createdAt, createdAtRaw, likesCount, site }) => (
-          <li data-site={site} data-url={url} data-created-at={createdAtRaw} data-likes-count={likesCount}>
-            <Card
-              title={title}
-              url={url}
-              name={name}
-              createdAt={createdAt}
-              likesCount={likesCount}
-              site={site}
-            />
-          </li>
-        ))
-      }
-    </ul>
+    <ArticlePanel panelId="primary" hidden>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">
+        各媒体の最新記事を{PRIMARY_SOURCE_MAX_ITEMS}件ずつ、媒体ごとにまとめて表示しています。
+      </p>
+      {primaryGroups.map((group) => <PrimarySourceSection label={group.label} articles={group.articles} />)}
+    </ArticlePanel>
 
-    <!-- フィルタ結果が0件の場合 -->
-    <p id="no-results" class="hidden text-center text-gray-500 dark:text-gray-400 py-8">
-      該当する記事がありません
-    </p>
+    <SourceList />
   </main>
 </Layout>
-
-<script>
-  import { cleanupOldArticles, isArticleRead, isBookmarked } from '../utils/localStorage';
-
-  // ページ読み込み時に1度だけ古い既読情報を削除
-  cleanupOldArticles();
-
-  // フィルタ・ソート状態の型定義
-  type ArticleSite = 'qiita' | 'zenn' | 'hatena';
-  type SiteFilter = 'all' | ArticleSite;
-  type ReadFilter = 'all' | 'unread' | 'read';
-  type BookmarkFilter = 'all' | 'bookmarked';
-  type SortOption = 'date' | 'likes';
-
-  let currentSiteFilter: SiteFilter = 'all';
-  let currentReadFilter: ReadFilter = 'all';
-  let currentBookmarkFilter: BookmarkFilter = 'all';
-  let currentSort: SortOption = 'date';
-
-  const articleList = document.getElementById('article-list');
-  const noResults = document.getElementById('no-results');
-  const siteFilterButtons = document.querySelectorAll<HTMLButtonElement>('[data-site-filter]');
-  const readFilterButtons = document.querySelectorAll<HTMLButtonElement>('[data-read-filter]');
-  const bookmarkFilterButtons = document.querySelectorAll<HTMLButtonElement>('[data-bookmark-filter]');
-  const sortButtons = document.querySelectorAll<HTMLButtonElement>('[data-sort]');
-
-  // アクティブなボタンのスタイルを適用
-  const activeClass = 'bg-gray-800 text-white dark:bg-white dark:text-gray-800';
-  const inactiveClass =
-    'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700';
-
-  function updateButtonStyles(
-    buttons: NodeListOf<HTMLButtonElement>,
-    activeValue: string,
-    dataAttr: 'siteFilter' | 'readFilter' | 'sort' | 'bookmarkFilter'
-  ) {
-    buttons.forEach((btn) => {
-      const value = btn.dataset[dataAttr];
-      const isActive = value === activeValue;
-
-      // クラスをリセットして適用
-      activeClass.split(' ').forEach((c) => btn.classList.toggle(c, isActive));
-      inactiveClass.split(' ').forEach((c) => btn.classList.toggle(c, !isActive));
-
-      // aria-pressed属性を更新
-      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-    });
-  }
-
-  function applyFilters() {
-    if (!articleList || !noResults) return;
-
-    const items = articleList.querySelectorAll<HTMLLIElement>('li[data-site]');
-    let visibleCount = 0;
-
-    items.forEach((item) => {
-      const site = item.dataset.site as ArticleSite;
-      const url = item.dataset.url || '';
-      const isRead = isArticleRead(url);
-      const bookmarked = isBookmarked(url);
-
-      // サイトフィルタのチェック
-      const siteMatch = currentSiteFilter === 'all' || site === currentSiteFilter;
-
-      // 既読/未読フィルタのチェック
-      const readMatch =
-        currentReadFilter === 'all' ||
-        (currentReadFilter === 'unread' && !isRead) ||
-        (currentReadFilter === 'read' && isRead);
-
-      // ブックマークフィルタのチェック
-      const bookmarkMatch = currentBookmarkFilter === 'all' || bookmarked;
-
-      const isVisible = siteMatch && readMatch && bookmarkMatch;
-      item.classList.toggle('hidden', !isVisible);
-
-      if (isVisible) visibleCount++;
-    });
-
-    // 0件メッセージの表示/非表示
-    noResults.classList.toggle('hidden', visibleCount > 0);
-  }
-
-  // フィルタ値のバリデーション
-  function isValidSiteFilter(value: string | undefined): value is SiteFilter {
-    return value === 'all' || value === 'qiita' || value === 'zenn' || value === 'hatena';
-  }
-
-  function isValidReadFilter(value: string | undefined): value is ReadFilter {
-    return value === 'all' || value === 'unread' || value === 'read';
-  }
-
-  function isValidSortOption(value: string | undefined): value is SortOption {
-    return value === 'date' || value === 'likes';
-  }
-
-  function isValidBookmarkFilter(value: string | undefined): value is BookmarkFilter {
-    return value === 'all' || value === 'bookmarked';
-  }
-
-  function applySort() {
-    if (!articleList) return;
-
-    const items = Array.from(articleList.querySelectorAll<HTMLLIElement>('li[data-site]'));
-
-    items.sort((a, b) => {
-      if (currentSort === 'date') {
-        const dateA = new Date(a.dataset.createdAt || '').getTime() || 0;
-        const dateB = new Date(b.dataset.createdAt || '').getTime() || 0;
-        return dateB - dateA;
-      } else {
-        const likesA = parseInt(a.dataset.likesCount || '0', 10);
-        const likesB = parseInt(b.dataset.likesCount || '0', 10);
-        return likesB - likesA;
-      }
-    });
-
-    items.forEach((item) => articleList.appendChild(item));
-  }
-
-  // サイトフィルタボタンのイベント
-  siteFilterButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const value = btn.dataset.siteFilter;
-      if (isValidSiteFilter(value)) {
-        currentSiteFilter = value;
-        updateButtonStyles(siteFilterButtons, currentSiteFilter, 'siteFilter');
-        applyFilters();
-      }
-    });
-  });
-
-  // 既読/未読フィルタボタンのイベント
-  readFilterButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const value = btn.dataset.readFilter;
-      if (isValidReadFilter(value)) {
-        currentReadFilter = value;
-        updateButtonStyles(readFilterButtons, currentReadFilter, 'readFilter');
-        applyFilters();
-      }
-    });
-  });
-
-  // ブックマークフィルタボタンのイベント
-  bookmarkFilterButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const value = btn.dataset.bookmarkFilter;
-      if (isValidBookmarkFilter(value)) {
-        currentBookmarkFilter = value;
-        updateButtonStyles(bookmarkFilterButtons, currentBookmarkFilter, 'bookmarkFilter');
-        applyFilters();
-      }
-    });
-  });
-
-  // ソートボタンのイベント
-  sortButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const value = btn.dataset.sort;
-      if (isValidSortOption(value)) {
-        currentSort = value;
-        updateButtonStyles(sortButtons, currentSort, 'sort');
-        applySort();
-      }
-    });
-  });
-
-  // 記事クリック時にフィルタを再適用（既読状態が変わるため）
-  window.addEventListener('article-read', () => applyFilters());
-
-  // ブックマーク変更時にフィルタを再適用
-  window.addEventListener('bookmark-changed', () => applyFilters());
-
-  // 初期状態でフィルタを適用（既読状態を反映）
-  applyFilters();
-</script>

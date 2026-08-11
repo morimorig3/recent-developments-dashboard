@@ -1,62 +1,22 @@
 ---
 import FilterButtonGroup from './FilterButtonGroup.astro';
+import type { FilterOption } from '../types/filter';
 
-const siteOptions = [
-  { value: 'all', label: 'すべて', isDefault: true },
-  { value: 'qiita', label: 'Qiita' },
-  { value: 'zenn', label: 'Zenn' },
-  { value: 'hatena', label: 'Hatena' },
-];
+interface Props {
+  /** ソースフィルタの選択肢 */
+  siteOptions: FilterOption[];
+  /** ソースフィルタのラベル (例: 「サイト」) */
+  siteLabel: string;
+}
 
-const readOptions = [
-  { value: 'all', label: 'すべて', isDefault: true },
-  { value: 'unread', label: '未読' },
-  { value: 'read', label: '既読' },
-];
-
-const bookmarkOptions = [
-  { value: 'all', label: 'すべて', isDefault: true },
-  { value: 'bookmarked', label: 'ブックマーク済み' },
-];
-
-const sortOptions = [
-  { value: 'date', label: '新着順', isDefault: true },
-  { value: 'likes', label: 'いいね数順' },
-];
+const { siteOptions, siteLabel } = Astro.props;
 ---
 
 <div class="mb-6 flex flex-wrap items-center gap-4">
   <FilterButtonGroup
-    label="サイト:"
+    label={`${siteLabel}:`}
     dataAttribute="site-filter"
     options={siteOptions}
-    ariaLabel="サイトフィルタ"
-  />
-
-  <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 hidden sm:block"></div>
-
-  <FilterButtonGroup
-    label="状態:"
-    dataAttribute="read-filter"
-    options={readOptions}
-    ariaLabel="既読状態フィルタ"
-  />
-
-  <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 hidden sm:block"></div>
-
-  <FilterButtonGroup
-    label="ブックマーク:"
-    dataAttribute="bookmark-filter"
-    options={bookmarkOptions}
-    ariaLabel="ブックマークフィルタ"
-  />
-
-  <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 hidden sm:block"></div>
-
-  <FilterButtonGroup
-    label="並び替え:"
-    dataAttribute="sort"
-    options={sortOptions}
-    ariaLabel="並び替え"
+    ariaLabel={`${siteLabel}フィルタ`}
   />
 </div>
